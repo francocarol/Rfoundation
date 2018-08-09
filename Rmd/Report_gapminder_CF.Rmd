@@ -1,0 +1,99 @@
+---
+title: "Report Gapminder - R Introduction Course - CODATA-RDA SS"
+author: "Caroline Franco"
+date: "August 8, 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Here we will present a report concerning an investigation motivates by the following question:
+
+**Is the *per capita* GDP of a country correlated with its life expectancy?**
+
+We will use the information contained in the *gapminder dataset* of *R*:
+
+```{r gapminder data}
+#library(tidyverse)
+
+if (!file.exists("../data/gapminder.csv")) {
+  download.file(url = "http://tiny.cc/SWCgapminder",
+              destfile = "../data/gapminder.csv")
+}
+gapminder <- read.csv("../data/gapminder.csv")
+head(gapminder)
+unique(gapminder$continent)
+```
+
+For simplicity, let's restrict ourselves to European countries.
+
+# Life expectancy in American countries over the years
+
+```{r lifeExp}
+gapminder %>% 
+  filter(continent == 'Americas')  %>% 
+  select(country, year, lifeExp) %>% 
+  ggplot(aes(x=year, y=lifeExp, colour=country)) +
+    geom_path() +
+    labs(x="year", y="life expectancy")
+```
+
+# *Per capita* GDP in American countries over the years
+
+```{r gdp}
+gapminder %>% 
+  filter(continent == 'Americas')  %>% 
+  select(country, year, gdpPercap) %>% 
+  ggplot(aes(x=year, y=gdpPercap, colour=country)) +
+    geom_path() +
+    labs(x="year", y="GDP per capita")
+```
+
+# Correlation between the two sets o data
+
+
+
+```{r Correlation}
+library(dplyr)
+library(plotly)
+
+countries_Americas <-unique(gapminder %>% filter(continent == 'Americas')  %>%  select(country))
+countries_Americas %>% as.character()
+l_contr <- nrow(countries_Americas)
+countries_Am_char <- (as.character(countries_Americas[,1]))
+
+correlations <- c()
+
+for(which_country in 1:l_contr){
+  gdp <- gapminder %>% 
+    filter(continent == 'Americas', country == countries_Am_char[which_country])  %>% 
+    select(gdpPercap, year)
+  
+  lex <- gapminder %>% 
+    filter(continent == 'Americas', country == countries_Am_char[which_country])  %>% 
+    select(lifeExp, year)
+  
+  cor(gdp$gdpPercap, lex$lifeExp)
+  
+  correlations <- rbind(correlations, cbind(countries_Am_char[which_country],cor(gdp$gdpPercap, lex$lifeExp)))
+  head(correlations)
+}
+
+corr <- as.data.frame( cbind(as.numeric(1:l_contr), correlations) )
+corr2 <- corr[order(corr$V3),]
+corr3 <- data.frame()
+corr3 <- cbind(as.character(corr2[,2]), as.numeric(corr2[,3]))
+
+ggplot(corr3, aes(x=corr[,1], y=corr[,2])) +
+    geom_point() +
+    labs(x="country", y="correlation") +
+    scale_y_continuous(breaks = c(-0.25, 0, 0.25, 0.5, 0.75, 1))
+
+```
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
