@@ -3,13 +3,20 @@ title: "Report Gapminder - R Introduction Course - CODATA-RDA SS"
 author: "Caroline Franco"
 date: "August 8, 2018"
 output:
-  html_document: default
+  html_document:
+      code_folding: hide # hide code but shows a button that makes it appear
   pdf_document: default
 ---
+
+Copyright:
+****
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons Licence" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+# Motivation
 
 Here we will present a report concerning an investigation motivates by the following question:
 
@@ -18,20 +25,29 @@ Here we will present a report concerning an investigation motivates by the follo
 We will use the information contained in the *gapminder dataset* of *R*:
 
 ```{r gapminder data}
-#library(tidyverse)
-
 if (!file.exists("../data/gapminder.csv")) {
   download.file(url = "http://tiny.cc/SWCgapminder",
               destfile = "../data/gapminder.csv")
 }
 gapminder <- read.csv("../data/gapminder.csv")
 head(gapminder)
+```
+
+Here we have data from 142 countries, of the 5 continents.
+
+```{r gapminder continents}
 unique(gapminder$continent)
 ```
 
-For simplicity, let's restrict ourselves to European countries.
+Hence, for simplicity, let's restrict ourselves to American countries.
+
 
 # Life expectancy in American countries over the years
+
+
+```{r loading tydiverse, echo=FALSE}
+library(tidyverse)
+```
 
 ```{r lifeExp}
 gapminder %>% 
@@ -55,18 +71,25 @@ gapminder %>%
 
 # Correlation between the two sets o data
 
-
-
-```{r Correlation}
-library(dplyr)
-library(plotly)
+```{r Selecting American countries}
+#library(dplyr)
+#library(plotly)
 
 countries_Americas <-unique(gapminder %>% filter(continent == 'Americas')  %>%  select(country))
-countries_Americas %>% as.character()
+#countries_Americas %>% as.character()
 l_contr <- nrow(countries_Americas)
 countries_Am_char <- (as.character(countries_Americas[,1]))
 
-correlations <- c()
+```
+
+```{r Correlations}
+#correlations <- c()
+correlations <- data.frame(Country=character(),
+                 Correlation=double(),
+                 stringsAsFactors=FALSE)
+
+#colnames(correlations) <- c("country", "correlation" )
+str(correlations)
 
 for(which_country in 1:l_contr){
   gdp <- gapminder %>% 
@@ -83,17 +106,31 @@ for(which_country in 1:l_contr){
   head(correlations)
 }
 
-corr <- as.data.frame( cbind(as.numeric(1:l_contr), correlations) )
-corr2 <- corr[order(corr$V3),]
-corr3 <- data.frame()
-corr3 <- cbind(as.character(corr2[,2]), as.numeric(corr2[,3]))
+corr2 <- arrange(correlations, desc(V2))
 
-ggplot(corr3, aes(x=corr[,1], y=corr[,2])) +
+#corr <- data.frame(correlations)
+# corr2 <- corr[order(corr$X2),]
+# corr3 <- data.frame(as.character(corr[,1]), corr[,2], stringsAsFactors=FALSE)
+# corr4 <- data.frame(as.character(corr2[,1]), corr2[,2], stringsAsFactors=FALSE)
+# corr4 <- corr4[order(corr4[,1]),]
+
+ggplot(correlations, aes(x=V1, y=V2)) +
     geom_point() +
-    labs(x="country", y="correlation") +
-    scale_y_continuous(breaks = c(-0.25, 0, 0.25, 0.5, 0.75, 1))
+    labs(x="country", y="correlation between GDP and life expectancy") +
+    #scale_y_continuous(breaks = c(-0.25, 0, 0.25, 0.5, 0.75, 1)) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+# 
+# ggplot(corr3, aes(x=corr3[,1], y=corr3[,2])) +
+#     geom_point() +
+#     labs(x="country", y="correlation") +
+#     #scale_y_continuous(breaks = c(-0.25, 0, 0.25, 0.5, 0.75, 1)) +
+#     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+# 
+# ggplot(corr4, aes(x=corr4[,1], y=corr4[,2])) +
+#     geom_point() +
+#     labs(x="country", y="correlation") +
+#     #scale_y_continuous(breaks = c(-0.25, 0, 0.25, 0.5, 0.75, 1)) +
+#     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 
 ```
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+
